@@ -5,7 +5,8 @@
 (function(){
     "use strict";
     var glyphPathsLoaded = false,
-        glyphPrefix = "glyphicons-";
+        glyphPrefix = "glyphicons-",
+        glyphPathsURI = {};
 
     function get(url){
         var xmlhttp, promise = {}, asCallbacks = [], i;
@@ -31,7 +32,7 @@
         return promise;
     }
 
-    window.loadGlyphiconsSvgs = function(svgUrl){
+    window.loadGlyphiconsSvgPaths = function(svgUrl){
         //Load the glyphicons paths
         if (!glyphPathsLoaded) {
             get(svgUrl).callback(function(data) {
@@ -41,8 +42,59 @@
                 data = data.replace("id=\"", "id=\"" + glyphPrefix);
                 div.innerHTML = data;
                 document.body.appendChild(div);
-                ed.maps.Google.glyphPathsLoaded = true;
+                glyphPathsLoaded = true;
             });
         }
     };
+
+    window.glyphToDataUri = function(glyphId, color) {
+        //check if cache has the value
+        if(glyphPathsURI[glyphId] && glyphPathsURI[glyphId][color]){
+            return glyphPathsURI[glyphId][color];
+        }
+        var outer = document.createElement("div");
+        var glyphObject = document.getElementById(glyphId);
+
+        //beacuse some icons are weirdly named
+        glyphId = glyphPrefix + glyphId.replace("_", "_x5F_");
+        if(glyphObject === null){
+            glyphObject = document.getElementById(glyphId + "_1_");
+        }
+
+        if(glyphObject === null){
+            glyphObject = document.getElementById(glyphId + "_2_");
+        }
+        //hack ends
+
+        if(glyphObject === null){
+            return false;
+        }
+
+        var glyphClone = glyphObject.cloneNode(true);
+
+        var box = glyphObject.getBBox();
+
+        glyphClone.setAttribute('fill', color);
+
+        var svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+        svg.appendChild(glyphClone);
+
+        svg.setAttribute("version", "1.1");
+        svg.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns", "http://www.w3.org/2000/svg");
+
+        svg.setAttribute("width", "48");
+        svg.setAttribute("height", "48");
+        svg.setAttribute("viewBox", box.x + " " + box.y + " 24 24");
+
+        outer.appendChild(svg);
+
+        var uri = 'data:image/svg+xml;base64,' + window.btoa(outer.innerHTML);
+
+        //cache it
+        glyphPathsURI[glyphId] = glyphPathsURI[glyphId] || {};
+        glyphPathsURI[glyphId][color] = uri;
+
+        //return calculated uri
+        return uri;
+    }
 });
