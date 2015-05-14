@@ -4,13 +4,14 @@
 
 (function(){
     "use strict";
+
     var glyphPathsLoaded = false,
         glyphPrefix = "glyphicons-",
         glyphPathsURI = {};
 
     function get(url){
         var xmlhttp, promise = {}, asCallbacks = [], i;
-        promise.callback = function(fun){
+        promise.next = function(fun){
             asCallbacks.push(fun);
             return promise;
         };
@@ -33,9 +34,15 @@
     }
 
     window.loadGlyphiconsSvgPaths = function(svgUrl){
+        var promise = {}, asCallbacks = [], i;
+        promise.next = function(fun){
+            asCallbacks.push(fun);
+            return promise;
+        };
+
         //Load the glyphicons paths
         if (!glyphPathsLoaded) {
-            get(svgUrl).callback(function(data) {
+            get(svgUrl).next(function(data) {
                 var div = document.createElement("div");
                 div.style.position = 'absolute';
                 div.style.top = '-99999px';
@@ -43,8 +50,12 @@
                 div.innerHTML = data;
                 document.body.appendChild(div);
                 glyphPathsLoaded = true;
+                for(i=0;asCallbacks.length;i++) {
+                    asCallbacks[i]();
+                }
             });
         }
+        return promise;
     };
 
     window.glyphToDataUri = function(glyphId, color) {
