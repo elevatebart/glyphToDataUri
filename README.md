@@ -1,2 +1,2 @@
-# glyphicons4gMaps
+# glyphToDataUri
 bridge between glyphicons and google maps
