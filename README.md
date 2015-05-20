@@ -1,10 +1,10 @@
 # glyphToDataUri
-bridge between glyphicons and google maps
+This code is a bridge between glyphicons and google maps
 
 Since google mpas accept only images and simple paths as markers, one should not be able to use glyphicons on a google maps implementation.
 Google maps markers images can find their source in images url and in complete innline URIs.
 
-Therefore generating a URI from a glyph allow as follows
+Therefore generating a URI from a glyph allow if used as follows to keep the scalability and coloration of the glyphicons even on maps. 
 
     
     var self = this,
@@ -35,3 +35,4 @@ Therefore generating a URI from a glyph allow as follows
         self.currentMarker = marker;
         return marker;
     }
+    

@@ -2,6 +2,8 @@
  * Created by bledoux on 5/14/2015.
  */
 
+var glyph = glyph || {};
+
 (function(){
     "use strict";
 
@@ -9,6 +11,7 @@
         glyphPrefix = "glyphicons-",
         glyphPathsURI = {};
 
+    //Simplify the Ajax Call
     function get(url){
         var xmlhttp, promise = {}, asCallbacks = [], i;
         promise.next = function(fun){
@@ -23,7 +26,7 @@
         }
         xmlhttp.onreadystatechange = function(){
             if (xmlhttp.readyState==4 && xmlhttp.status==200) {
-                for(i=0;asCallbacks.length;i++) {
+                for(i=0;i<asCallbacks.length;i++) {
                     asCallbacks[i](xmlhttp.responseText);
                 }
             }
@@ -33,10 +36,10 @@
         return promise;
     }
 
-    window.loadGlyphiconsSvgPaths = function(svgUrl){
-        var promise = {}, asCallbacks = [], i;
-        promise.next = function(fun){
-            asCallbacks.push(fun);
+    glyph.loadSvgPaths = function(svgUrl){
+        var promise = {}, callback;
+        promise.loaded = function(fun){
+            callback = fun;
             return promise;
         };
 
@@ -46,28 +49,36 @@
                 var div = document.createElement("div");
                 div.style.position = 'absolute';
                 div.style.top = '-99999px';
-                data = data.replace("id=\"", "id=\"" + glyphPrefix);
+                data = data.replace(/ id="/g, ' id=\"' + glyphPrefix);
                 div.innerHTML = data;
                 document.body.appendChild(div);
                 glyphPathsLoaded = true;
-                for(i=0;asCallbacks.length;i++) {
-                    asCallbacks[i]();
-                }
+                callback();
             });
         }
         return promise;
     };
 
-    window.glyphToDataUri = function(glyphId, color) {
+    glyph.toDataUri = function(glyphId, color, options) {
+        if(!glyphPathsLoaded){
+            if(console){
+                console.error("glyph.loadSvgPaths has to be finished before calling toDataUri");
+            }
+            return false;
+        }
+        options = options || {};
+        var width = options.width || 24,
+            height = options.height || 24;
+
         //check if cache has the value
         if(glyphPathsURI[glyphId] && glyphPathsURI[glyphId][color]){
             return glyphPathsURI[glyphId][color];
         }
         var outer = document.createElement("div");
-        var glyphObject = document.getElementById(glyphId);
 
         //beacuse some icons are weirdly named
         glyphId = glyphPrefix + glyphId.replace("_", "_x5F_");
+        var glyphObject = document.getElementById(glyphId);
         if(glyphObject === null){
             glyphObject = document.getElementById(glyphId + "_1_");
         }
@@ -93,9 +104,9 @@
         svg.setAttribute("version", "1.1");
         svg.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns", "http://www.w3.org/2000/svg");
 
-        svg.setAttribute("width", "48");
-        svg.setAttribute("height", "48");
-        svg.setAttribute("viewBox", box.x + " " + box.y + " 24 24");
+        svg.setAttribute("width", (width*2).toString());
+        svg.setAttribute("height", (height*2).toString());
+        svg.setAttribute("viewBox", box.x + " " + box.y + " " + width + " " + height);
 
         outer.appendChild(svg);
 
@@ -107,5 +118,5 @@
 
         //return calculated uri
         return uri;
-    }
-});
+    };
+})();
