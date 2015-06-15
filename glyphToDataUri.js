@@ -4,7 +4,7 @@
 
 var glyph = glyph || {};
 
-(function(){
+(function () {
     "use strict";
 
     var glyphPathsLoaded = false,
@@ -12,21 +12,21 @@ var glyph = glyph || {};
         glyphPathsURI = {};
 
     //Simplify the Ajax Call
-    function get(url){
+    function get(url) {
         var xmlhttp, promise = {}, asCallbacks = [], i;
-        promise.next = function(fun){
+        promise.next = function (fun) {
             asCallbacks.push(fun);
             return promise;
         };
-        if (window.XMLHttpRequest){
+        if (window.XMLHttpRequest) {
             // code for IE7+, Firefox, Chrome, Opera, Safari
-            xmlhttp=new XMLHttpRequest();
-        }else{// code for IE6, IE5
-            xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
+            xmlhttp = new XMLHttpRequest();
+        } else {// code for IE6, IE5
+            xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
         }
-        xmlhttp.onreadystatechange = function(){
-            if (xmlhttp.readyState==4 && xmlhttp.status==200) {
-                for(i=0;i<asCallbacks.length;i++) {
+        xmlhttp.onreadystatechange = function () {
+            if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+                for (i = 0; i < asCallbacks.length; i++) {
                     asCallbacks[i](xmlhttp.responseText);
                 }
             }
@@ -36,16 +36,20 @@ var glyph = glyph || {};
         return promise;
     }
 
-    glyph.loadSvgPaths = function(svgUrl){
+    glyph.loadSvgPaths = function (svgUrl) {
         var promise = {}, callback;
-        promise.loaded = function(fun){
-            callback = fun;
+        promise.loaded = function (fun) {
+            if (!glyphPathsLoaded) {
+                callback = fun;
+            } else {
+                fun();
+            }
             return promise;
         };
 
         //Load the glyphicons paths
         if (!glyphPathsLoaded) {
-            get(svgUrl).next(function(data) {
+            get(svgUrl).next(function (data) {
                 var div = document.createElement("div");
                 div.style.position = 'absolute';
                 div.style.top = '-99999px';
@@ -59,9 +63,9 @@ var glyph = glyph || {};
         return promise;
     };
 
-    glyph.toDataUri = function(glyphId, color, options) {
-        if(!glyphPathsLoaded){
-            if(console){
+    glyph.toDataUri = function (glyphId, color, options) {
+        if (!glyphPathsLoaded) {
+            if (console) {
                 console.error("glyph.loadSvgPaths has to be finished before calling toDataUri");
             }
             return false;
@@ -71,7 +75,7 @@ var glyph = glyph || {};
             height = options.height || 24;
 
         //check if cache has the value
-        if(glyphPathsURI[glyphId] && glyphPathsURI[glyphId][color]){
+        if (glyphPathsURI[glyphId] && glyphPathsURI[glyphId][color]) {
             return glyphPathsURI[glyphId][color];
         }
         var outer = document.createElement("div");
@@ -79,16 +83,16 @@ var glyph = glyph || {};
         //beacuse some icons are weirdly named
         glyphId = glyphPrefix + glyphId.replace("_", "_x5F_");
         var glyphObject = document.getElementById(glyphId);
-        if(glyphObject === null){
+        if (glyphObject === null) {
             glyphObject = document.getElementById(glyphId + "_1_");
         }
 
-        if(glyphObject === null){
+        if (glyphObject === null) {
             glyphObject = document.getElementById(glyphId + "_2_");
         }
         //hack ends
 
-        if(glyphObject === null){
+        if (glyphObject === null) {
             return false;
         }
 
@@ -98,14 +102,14 @@ var glyph = glyph || {};
 
         glyphClone.setAttribute('fill', color);
 
-        var svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+        var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
         svg.appendChild(glyphClone);
 
         svg.setAttribute("version", "1.1");
         svg.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns", "http://www.w3.org/2000/svg");
 
-        svg.setAttribute("width", (width*2).toString());
-        svg.setAttribute("height", (height*2).toString());
+        svg.setAttribute("width", (width * 2).toString());
+        svg.setAttribute("height", (height * 2).toString());
         svg.setAttribute("viewBox", box.x + " " + box.y + " " + width + " " + height);
 
         outer.appendChild(svg);
