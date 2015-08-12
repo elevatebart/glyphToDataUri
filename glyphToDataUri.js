@@ -8,6 +8,7 @@ var glyph = glyph || {};
     "use strict";
 
     var glyphPathsLoaded = false,
+        hasBBoxCapacity = false,
         glyphPrefix = "glyphicons-",
         glyphPathsURI = {};
 
@@ -50,12 +51,22 @@ var glyph = glyph || {};
         //Load the glyphicons paths
         if (!glyphPathsLoaded) {
             get(svgUrl).next(function (data) {
-                var div = document.createElement("div");
+                var div = document.createElement("div"), i;
                 div.style.position = 'absolute';
                 div.style.top = '-99999px';
                 data = data.replace(/ id="/g, ' id=\"' + glyphPrefix);
                 div.innerHTML = data;
                 document.body.appendChild(div);
+                //Check if what we need is available
+                for (i = 0; i < div.childNodes.length; i++) {
+                    if (div.childNodes[i].nodeName === "svg") {
+                        if (typeof div.childNodes[i].getBBox === "function") {
+                            hasBBoxCapacity = true;
+                        }
+                        break;
+                    }
+                }
+
                 glyphPathsLoaded = true;
                 callback();
             });
@@ -63,8 +74,12 @@ var glyph = glyph || {};
         return promise;
     };
 
+    glyph.enabled = function () {
+        return glyphPathsLoaded && hasBBoxCapacity;
+    };
+
     glyph.toDataUri = function (glyphId, color, options) {
-        if (!glyphPathsLoaded) {
+        if (!(glyphPathsLoaded && hasBBoxCapacity)) {
             if (console) {
                 console.error("glyph.loadSvgPaths has to be finished before calling toDataUri");
             }
